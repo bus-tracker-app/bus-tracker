@@ -1,0 +1,26 @@
+{
+	"name": "@bus-tracker/server",
+	"version": "0.0.0",
+	"main": "dist/index.js",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "tsc",
+		"dev": "nodemon",
+		"start": "node --env-file .env --enable-source-maps ."
+	},
+	"devDependencies": {
+		"@bus-tracker/tsconfig": "workspace:*",
+		"@types/node": "^22.7.7",
+		"drizzle-kit": "^0.26.2"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.13.2",
+		"drizzle-orm": "^0.35.2",
+		"hono": "^4.6.5",
+		"p-limit": "^6.1.0",
+		"postgres": "^3.4.4",
+		"redis": "^4.7.0",
+		"temporal-polyfill": "^0.2.5"
+	}
+}

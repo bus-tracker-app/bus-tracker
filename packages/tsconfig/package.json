@@ -1,0 +1,7 @@
+{
+	"name": "@bus-tracker/tsconfig",
+	"private": true,
+	"publishConfig": {
+		"access": "public"
+	}
+}

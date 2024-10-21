@@ -1,0 +1,11 @@
+{
+	"extends": "@bus-tracker/tsconfig/tsconfig.base.json",
+	"compilerOptions": {
+		"target": "ESNext",
+		"lib": ["ESNext"],
+		"rootDir": "src",
+		"outDir": "dist"
+	},
+	"include": ["src"],
+	"exclude": ["node_modules"]
+}

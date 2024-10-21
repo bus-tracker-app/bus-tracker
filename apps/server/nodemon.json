@@ -1,0 +1,7 @@
+{
+  "watch": [ "src" ],
+  "ignoreRoot": [".git"],
+  "ext": "ts,json,js",
+  "ignore": ["src/**/*.spec.ts", "src/tests/**/*"],
+  "exec": "pnpm build && pnpm start"
+}

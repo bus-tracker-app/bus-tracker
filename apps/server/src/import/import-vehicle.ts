@@ -1,8 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { database } from "../database/database.js";
 import { vehicles } from "../database/schema.js";
 
+import { nthIndexOf } from "../utils/nth-index-of.js";
 import { importNetwork } from "./import-network.js";
 import { importOperator } from "./import-operator.js";
 
@@ -19,8 +20,13 @@ export async function importVehicle(networkRef: string, vehicleRef: string, oper
 						eq(vehicles.networkId, network.id),
 						eq(vehicles.operatorId, operator.id),
 						eq(vehicles.ref, vehicleRef),
+						isNull(vehicles.archivedAt),
 					)
-				: and(eq(vehicles.networkId, network.id), eq(vehicles.ref, vehicleRef)),
+				: and(
+						eq(vehicles.networkId, network.id),
+						eq(vehicles.ref, vehicleRef),
+						isNull(vehicles.archivedAt),
+					),
 		);
 	if (typeof vehicle === "undefined") {
 		vehicle = (
@@ -30,6 +36,7 @@ export async function importVehicle(networkRef: string, vehicleRef: string, oper
 					networkId: network.id,
 					operatorId: operator?.id,
 					ref: vehicleRef,
+					number: vehicleRef.slice(nthIndexOf(vehicleRef, ":", 3) + 1),
 				})
 				.returning()
 		).at(0)!;

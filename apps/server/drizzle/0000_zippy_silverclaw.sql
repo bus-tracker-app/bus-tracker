@@ -7,6 +7,15 @@ CREATE TABLE IF NOT EXISTS "girouette" (
 	"data" json NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "line_activity" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"vehicle_id" integer NOT NULL,
+	"line_id" integer NOT NULL,
+	"service_date" date NOT NULL,
+	"started_at" timestamp (0) with time zone NOT NULL,
+	"updated_at" timestamp (0) with time zone NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "line" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"network_id" integer NOT NULL,
@@ -15,7 +24,16 @@ CREATE TABLE IF NOT EXISTS "line" (
 	"cartridge_href" varchar,
 	"color" char(6),
 	"text_color" char(6),
-	"archived_at" timestamp with time zone
+	"archived_at" timestamp
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "mercato_activity" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"vehicle_id" integer NOT NULL,
+	"from_network_id" integer NOT NULL,
+	"to_network_id" integer NOT NULL,
+	"comment" text,
+	"recorded_at" timestamp (0) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "network" (
@@ -43,9 +61,10 @@ CREATE TABLE IF NOT EXISTS "vehicle" (
 	"network_id" integer NOT NULL,
 	"operator_id" integer,
 	"ref" varchar NOT NULL,
+	"number" varchar NOT NULL,
 	"designation" varchar,
 	"tc_id" integer,
-	"archived_at" timestamp with time zone
+	"archived_at" timestamp (0)
 );
 --> statement-breakpoint
 DO $$ BEGIN
@@ -61,7 +80,37 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "line_activity" ADD CONSTRAINT "line_activity_vehicle_id_vehicle_id_fk" FOREIGN KEY ("vehicle_id") REFERENCES "public"."vehicle"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "line_activity" ADD CONSTRAINT "line_activity_line_id_line_id_fk" FOREIGN KEY ("line_id") REFERENCES "public"."line"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "line" ADD CONSTRAINT "line_network_id_network_id_fk" FOREIGN KEY ("network_id") REFERENCES "public"."network"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "mercato_activity" ADD CONSTRAINT "mercato_activity_vehicle_id_vehicle_id_fk" FOREIGN KEY ("vehicle_id") REFERENCES "public"."vehicle"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "mercato_activity" ADD CONSTRAINT "mercato_activity_from_network_id_network_id_fk" FOREIGN KEY ("from_network_id") REFERENCES "public"."network"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "mercato_activity" ADD CONSTRAINT "mercato_activity_to_network_id_network_id_fk" FOREIGN KEY ("to_network_id") REFERENCES "public"."network"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -83,3 +132,7 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "line_activity_vehicle_index" ON "line_activity" USING btree ("vehicle_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "mercato_activity_vehicle_index" ON "mercato_activity" USING btree ("vehicle_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "vehicle_network_index" ON "vehicle" USING btree ("operator_id");

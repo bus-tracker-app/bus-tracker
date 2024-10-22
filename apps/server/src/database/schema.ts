@@ -1,14 +1,53 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
 	char,
+	customType,
+	date,
+	index,
 	integer,
 	json,
 	pgTable,
 	serial,
 	smallint,
-	timestamp,
+	text,
 	varchar,
 } from "drizzle-orm/pg-core";
+import { Temporal } from "temporal-polyfill";
+
+export const timestamp = customType<{
+	data: Temporal.Instant;
+	driverData: string;
+	config: { precision?: number };
+}>({
+	dataType(config) {
+		const precision = typeof config?.precision !== "undefined" ? ` (${config.precision})` : "";
+		return `timestamp${precision}`;
+	},
+	fromDriver(value) {
+		return Temporal.Instant.from(`${value.replace(" ", "T")}Z`);
+	},
+	toDriver(value) {
+		return value.toString();
+	},
+});
+
+export const timestamptz = customType<{
+	data: Temporal.ZonedDateTime;
+	driverData: string;
+	config: { precision?: number };
+}>({
+	dataType(config) {
+		const precision = typeof config?.precision !== "undefined" ? ` (${config.precision})` : "";
+		return `timestamp${precision} with time zone`;
+	},
+	fromDriver(value) {
+		const offset = value.slice(value.indexOf("+"));
+		return Temporal.ZonedDateTime.from(`${value}[${offset}]`);
+	},
+	toDriver(value) {
+		return value.toString({ timeZoneName: "never" });
+	},
+});
 
 export const networks = pgTable("network", {
 	id: serial("id").primaryKey(),
@@ -44,7 +83,7 @@ export const lines = pgTable("line", {
 	cartridgeHref: varchar("cartridge_href"),
 	color: char("color", { length: 6 }),
 	textColor: char("text_color", { length: 6 }),
-	archivedAt: timestamp("archived_at", { withTimezone: true }),
+	archivedAt: timestamp("archived_at"),
 });
 
 export type Line = InferSelectModel<typeof lines>;
@@ -62,16 +101,67 @@ export const girouettes = pgTable("girouette", {
 
 export type Girouette = InferSelectModel<typeof girouettes>;
 
-export const vehicles = pgTable("vehicle", {
-	id: serial("id").primaryKey(),
-	networkId: integer("network_id")
-		.notNull()
-		.references(() => networks.id),
-	operatorId: integer("operator_id").references(() => operators.id),
-	ref: varchar("ref").notNull(),
-	designation: varchar("designation"),
-	tcId: integer("tc_id"),
-	archivedAt: timestamp("archived_at", { withTimezone: true }),
-});
+export const vehicles = pgTable(
+	"vehicle",
+	{
+		id: serial("id").primaryKey(),
+		networkId: integer("network_id")
+			.notNull()
+			.references(() => networks.id),
+		operatorId: integer("operator_id").references(() => operators.id),
+		ref: varchar("ref").notNull(),
+		number: varchar("number").notNull(),
+		designation: varchar("designation"),
+		tcId: integer("tc_id"),
+		archivedAt: timestamp("archived_at", { precision: 0 }),
+	},
+	(table) => ({
+		networkIndex: index("vehicle_network_index").on(table.operatorId),
+	}),
+);
 
 export type Vehicle = InferSelectModel<typeof vehicles>;
+
+export const lineActivities = pgTable(
+	"line_activity",
+	{
+		id: serial("id").primaryKey(),
+		vehicleId: integer("vehicle_id")
+			.notNull()
+			.references(() => vehicles.id),
+		lineId: integer("line_id")
+			.notNull()
+			.references(() => lines.id),
+		serviceDate: date("service_date", { mode: "string" }).notNull(),
+		startedAt: timestamptz("started_at", { precision: 0 }).notNull(),
+		updatedAt: timestamptz("updated_at", { precision: 0 }).notNull(),
+	},
+	(table) => ({
+		vehicleIndex: index("line_activity_vehicle_index").on(table.vehicleId),
+	}),
+);
+
+export type LineActivity = InferSelectModel<typeof lineActivities>;
+
+export const mercatoActivity = pgTable(
+	"mercato_activity",
+	{
+		id: serial("id").primaryKey(),
+		vehicleId: integer("vehicle_id")
+			.notNull()
+			.references(() => vehicles.id),
+		fromNetworkId: integer("from_network_id")
+			.notNull()
+			.references(() => networks.id),
+		toNetworkId: integer("to_network_id")
+			.notNull()
+			.references(() => networks.id),
+		comment: text("comment"),
+		recordedAt: timestamp("recorded_at", { precision: 0 }).notNull(),
+	},
+	(table) => ({
+		vehicleIndex: index("mercato_activity_vehicle_index").on(table.vehicleId),
+	}),
+);
+
+export type MercatoActivity = InferSelectModel<typeof mercatoActivity>;

@@ -7,12 +7,15 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "nodemon",
-		"start": "node --env-file .env --enable-source-maps ."
+		"start": "node --env-file .env --enable-source-maps .",
+		"migrations:generate": "drizzle-kit generate",
+		"migrations:push": "drizzle-kit push"
 	},
 	"devDependencies": {
 		"@bus-tracker/tsconfig": "workspace:*",
 		"@types/node": "^22.7.7",
-		"drizzle-kit": "^0.26.2"
+		"drizzle-kit": "^0.26.2",
+		"nodemon": "^3.1.7"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.13.2",

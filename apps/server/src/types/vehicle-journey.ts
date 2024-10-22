@@ -19,8 +19,8 @@ export type VehicleJourneyLine = {
 };
 
 export type VehicleJourneyCall = {
-	aimedTime: Temporal.ZonedDateTime;
-	expectedTime?: Temporal.ZonedDateTime;
+	aimedTime: string;
+	expectedTime?: string;
 	stopRef: string;
 	stopName: string;
 	stopOrder: number;
@@ -32,7 +32,7 @@ export type VehicleJourneyPosition = {
 	longitude: number;
 	atStop: boolean;
 	type: "GPS" | "COMPUTED";
-	recordedAt: Temporal.Instant;
+	recordedAt: string;
 };
 
 export type VehicleJourney = {
@@ -44,8 +44,8 @@ export type VehicleJourney = {
 	position: VehicleJourneyPosition;
 	networkRef: string;
 	journeyRef?: string;
-	datedJourneyRef?: string;
 	operatorRef?: string;
 	vehicleRef?: string;
-	updatedAt: Temporal.Instant;
+	serviceDate?: string;
+	updatedAt: string;
 };

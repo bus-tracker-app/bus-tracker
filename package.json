@@ -1,7 +1,7 @@
 {
 	"name": "@bus-tracker/bus-tracker",
 	"description": "The Bus Tracker application.",
-	"version": "0.1.0",
+	"version": "2.0.0",
 	"author": "Kevin BIOJOUT <coucou@kevinbioj.fr>",
 	"license": "GPL-3.0-only",
 	"private": true,
@@ -10,7 +10,9 @@
 		"check": "biome check --write",
 		"check:ci": "biome ci",
 		"dev": "turbo dev",
-		"start": "turbo start"
+		"start:client": "pnpm -C apps/client dev",
+		"start:processor-gtfs": "pnpm -C apps/processor-gtfs start",
+		"start:server": "pnpm -C apps/server dev"
 	},
 	"packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228",
 	"devDependencies": {

@@ -22,11 +22,7 @@ export async function importVehicle(networkRef: string, vehicleRef: string, oper
 						eq(vehicles.ref, vehicleRef),
 						isNull(vehicles.archivedAt),
 					)
-				: and(
-						eq(vehicles.networkId, network.id),
-						eq(vehicles.ref, vehicleRef),
-						isNull(vehicles.archivedAt),
-					),
+				: and(eq(vehicles.networkId, network.id), eq(vehicles.ref, vehicleRef), isNull(vehicles.archivedAt)),
 		);
 	if (typeof vehicle === "undefined") {
 		vehicle = (

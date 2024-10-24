@@ -1,7 +1,0 @@
-{
-	"name": "@bus-tracker/types",
-	"private": true,
-	"publishConfig": {
-		"access": "public"
-	}
-}

@@ -1,32 +1,44 @@
+import * as Sentry from "@sentry/node";
+import { and, eq, gte } from "drizzle-orm";
 import pLimit from "p-limit";
-
-import { and, eq, gte, lte } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
+
+import type { VehicleJourney } from "@bus-tracker/contracts/vehicle-journey";
+
 import { database } from "../database/database.js";
-import { lineActivities } from "../database/schema.js";
+import { lineActivities, vehicles } from "../database/schema.js";
 import { importLine } from "../import/import-line.js";
 import { importVehicle } from "../import/import-vehicle.js";
-import type { VehicleJourney } from "../types/vehicle-journey.js";
 
 const ACTIVITY_THRESHOLD_MNS = 10;
 
 const registerFn = pLimit(1);
 
-export function registerActivity(journey: VehicleJourney) {
-	return registerFn(() => _registerActivity(journey));
+export function registerActivity(vehicleJourney: VehicleJourney) {
+	return registerFn(async () => {
+		try {
+			await _registerActivity(vehicleJourney);
+		} catch (error) {
+			console.error("Failed to register activity for '%s':", vehicleJourney.id, error);
+			Sentry.captureException(error, {
+				extra: { journey: vehicleJourney },
+				tags: { section: "activity-registration" },
+			});
+		}
+	});
 }
 
-async function _registerActivity(journey: VehicleJourney) {
-	if (typeof journey.line === "undefined" || typeof journey.vehicleRef === "undefined") return;
+async function _registerActivity(vehicleJourney: VehicleJourney) {
+	if (typeof vehicleJourney.line === "undefined" || typeof vehicleJourney.vehicleRef === "undefined") return;
 
-	const vehicle = await importVehicle(journey.networkRef, journey.vehicleRef, journey.operatorRef);
+	const vehicle = await importVehicle(vehicleJourney.networkRef, vehicleJourney.vehicleRef, vehicleJourney.operatorRef);
 	const line = await importLine(
-		journey.networkRef,
-		journey.line,
-		Temporal.Instant.from(journey.updatedAt),
+		vehicleJourney.networkRef,
+		vehicleJourney.line,
+		Temporal.Instant.from(vehicleJourney.updatedAt),
 	);
 
-	const recordedAt = Temporal.ZonedDateTime.from(journey.updatedAt);
+	const recordedAt = Temporal.Instant.from(vehicleJourney.position.recordedAt);
 
 	const [currentActivity] = await database
 		.select()
@@ -39,18 +51,16 @@ async function _registerActivity(journey: VehicleJourney) {
 			),
 		);
 
-	if (typeof currentActivity !== "undefined") {
-		await database
-			.update(lineActivities)
-			.set({ updatedAt: recordedAt })
-			.where(eq(lineActivities.id, currentActivity.id));
-	} else {
-		await database.insert(lineActivities).values({
-			vehicleId: vehicle.id,
-			lineId: line.id,
-			serviceDate: Temporal.PlainDate.from(journey.serviceDate!).toString(),
-			startedAt: recordedAt,
-			updatedAt: recordedAt,
-		});
-	}
+	await Promise.all([
+		database.update(vehicles).set({ lastSeenAt: recordedAt }).where(eq(vehicles.id, vehicle.id)),
+		typeof currentActivity !== "undefined"
+			? database.update(lineActivities).set({ updatedAt: recordedAt }).where(eq(lineActivities.id, currentActivity.id))
+			: database.insert(lineActivities).values({
+					vehicleId: vehicle.id,
+					lineId: line.id,
+					serviceDate: Temporal.PlainDate.from(vehicleJourney.serviceDate!).toString(),
+					startedAt: recordedAt,
+					updatedAt: recordedAt,
+				}),
+	]);
 }

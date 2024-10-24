@@ -1,0 +1,20 @@
+{
+	"name": "@bus-tracker/contracts",
+	"type": "module",
+	"private": true,
+	"exports": {
+		"./vehicle-journey": "./dist/vehicle-journey.js"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"@bus-tracker/tsconfig": "workspace:*"
+	},
+	"dependencies": {
+		"zod": "^3.23.8"
+	}
+}

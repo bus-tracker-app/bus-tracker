@@ -1,17 +1,14 @@
 import { and, eq, gte, isNull, or } from "drizzle-orm";
 
+import type { VehicleJourneyLine } from "@bus-tracker/contracts/vehicle-journey";
+
 import { database } from "../database/database.js";
 import { lines } from "../database/schema.js";
-import type { VehicleJourneyLine } from "../types/vehicle-journey.js";
 
 import type { Temporal } from "temporal-polyfill";
 import { importNetwork } from "./import-network.js";
 
-export async function importLine(
-	networkRef: string,
-	lineData: VehicleJourneyLine,
-	recordedAt: Temporal.Instant,
-) {
+export async function importLine(networkRef: string, lineData: VehicleJourneyLine, recordedAt: Temporal.Instant) {
 	const network = await importNetwork(networkRef);
 	let [line] = await database
 		.select()

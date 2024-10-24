@@ -31,24 +31,6 @@ export const timestamp = customType<{
 	},
 });
 
-export const timestamptz = customType<{
-	data: Temporal.ZonedDateTime;
-	driverData: string;
-	config: { precision?: number };
-}>({
-	dataType(config) {
-		const precision = typeof config?.precision !== "undefined" ? ` (${config.precision})` : "";
-		return `timestamp${precision} with time zone`;
-	},
-	fromDriver(value) {
-		const offset = value.slice(value.indexOf("+"));
-		return Temporal.ZonedDateTime.from(`${value}[${offset}]`);
-	},
-	toDriver(value) {
-		return value.toString({ timeZoneName: "never" });
-	},
-});
-
 export const networks = pgTable("network", {
 	id: serial("id").primaryKey(),
 	ref: varchar("ref").notNull().unique(),
@@ -113,6 +95,7 @@ export const vehicles = pgTable(
 		number: varchar("number").notNull(),
 		designation: varchar("designation"),
 		tcId: integer("tc_id"),
+		lastSeenAt: timestamp("last_seen_at", { precision: 0 }),
 		archivedAt: timestamp("archived_at", { precision: 0 }),
 	},
 	(table) => ({
@@ -133,8 +116,8 @@ export const lineActivities = pgTable(
 			.notNull()
 			.references(() => lines.id),
 		serviceDate: date("service_date", { mode: "string" }).notNull(),
-		startedAt: timestamptz("started_at", { precision: 0 }).notNull(),
-		updatedAt: timestamptz("updated_at", { precision: 0 }).notNull(),
+		startedAt: timestamp("started_at", { precision: 0 }).notNull(),
+		updatedAt: timestamp("updated_at", { precision: 0 }).notNull(),
 	},
 	(table) => ({
 		vehicleIndex: index("line_activity_vehicle_index").on(table.vehicleId),
@@ -142,6 +125,14 @@ export const lineActivities = pgTable(
 );
 
 export type LineActivity = InferSelectModel<typeof lineActivities>;
+
+// export const currentVehicleActivities = pgView("current_vehicle_activity").as((qb) =>
+// 	qb
+// 		.select({ vehicleId: vehicles.id, lineId: lineActivities.lineId, since: lineActivities.startedAt })
+// 		.from(lineActivities)
+// 		// .where(lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600_000))
+// 		.rightJoin(vehicles, eq(vehicles.id, lineActivities.vehicleId)),
+// );
 
 export const mercatoActivity = pgTable(
 	"mercato_activity",

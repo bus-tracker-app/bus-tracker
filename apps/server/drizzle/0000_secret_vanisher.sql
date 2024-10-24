@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS "line_activity" (
 	"vehicle_id" integer NOT NULL,
 	"line_id" integer NOT NULL,
 	"service_date" date NOT NULL,
-	"started_at" timestamp (0) with time zone NOT NULL,
-	"updated_at" timestamp (0) with time zone NOT NULL
+	"started_at" timestamp (0) NOT NULL,
+	"updated_at" timestamp (0) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "line" (
@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS "vehicle" (
 	"number" varchar NOT NULL,
 	"designation" varchar,
 	"tc_id" integer,
+	"last_seen_at" timestamp (0),
 	"archived_at" timestamp (0)
 );
 --> statement-breakpoint

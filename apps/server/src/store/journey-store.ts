@@ -1,6 +1,6 @@
 import { Temporal } from "temporal-polyfill";
 
-import type { VehicleJourney } from "../types/vehicle-journey.js";
+import type { VehicleJourney } from "@bus-tracker/contracts/vehicle-journey";
 
 const SWEEP_INTERVAL = Temporal.Duration.from({ seconds: 60 });
 

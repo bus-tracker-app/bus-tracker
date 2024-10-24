@@ -1,0 +1,6 @@
+{
+	"material-icon-theme.folders.associations": {
+		"processor-gtfs": "database",
+		"tsconfig": "typescript"
+	}
+}
